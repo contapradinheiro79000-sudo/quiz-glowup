@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Diagnóstico de Transformação Capilar · Réveillon</title>
+<meta name="description" content="Descubra seu perfil capilar e receba o protocolo exato para arrasar nas fotos de fim de ano." />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Poppins", "ui-sans-serif", "system-ui"] },
+        colors: {
+          rose: {
+            50: "#fff5f7", 100: "#ffe4ec", 200: "#ffc9da",
+            300: "#ff9fbf", 400: "#ff6f9f", 500: "#f24a85",
+            600: "#d93070", 700: "#b11f59",
+          },
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root { --bg1: #fff5f7; --bg2: #ffe9f1; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Poppins", sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #ffe1ec 0%, transparent 60%),
+      linear-gradient(170deg, var(--bg1), #fff 55%, var(--bg2));
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .screen { animation: fadeUp .45s cubic-bezier(.22,1,.36,1); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .opt { transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease; }
+  .opt:active { transform: scale(.98); }
+  .opt.selected {
+    border-color: #f24a85;
+    background: linear-gradient(180deg,#fff,#fff0f5);
+    box-shadow: 0 10px 24px -12px rgba(242,74,133,.6);
+  }
+  .cta {
+    background: linear-gradient(90deg,#f24a85,#ff7aa8);
+    box-shadow: 0 14px 30px -10px rgba(242,74,133,.65);
+    transition: transform .12s ease, filter .2s ease;
+  }
+  .cta:active { transform: translateY(1px) scale(.99); }
+  .cta:hover { filter: brightness(1.04); }
+  .progress-bar { transition: width .5s cubic-bezier(.22,1,.36,1); }
+  .spinner {
+    width: 68px; height: 68px; border-radius: 50%;
+    border: 5px solid #ffd7e5; border-top-color: #f24a85;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:1} }
+  .shimmer {
+    background: linear-gradient(90deg,#ffe4ec 25%,#fff 50%,#ffe4ec 75%);
+    background-size: 200% 100%; animation: shim 1.3s infinite;
+  }
+  @keyframes shim { to { background-position: -200% 0; } }
+  .badge-glow { box-shadow: 0 0 0 6px rgba(242,74,133,.1); }
+  .fade-enter { opacity: 0; transform: translateY(10px); }
+</style>
+</head>
+<body class="text-slate-800">
+<!-- ======================= APP SHELL (mobile-first) ======================= -->
+<div class="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 pb-8 pt-4">
+
+  <!-- Top bar / progress -->
+  <header id="topbar" class="sticky top-0 z-10 -mx-5 mb-2 bg-transparent px-5 pt-2">
+    <div class="flex items-center justify-between pb-2">
+      <div class="flex items-center gap-2">
+        <div class="grid h-8 w-8 place-items-center rounded-full bg-rose-500 text-white font-bold">✦</div>
+        <span class="text-sm font-semibold text-rose-700">Glow Réveillon</span>
+      </div>
+      <span id="stepLabel" class="text-xs font-medium text-rose-400">Comece aqui</span>
+    </div>
+    <div class="h-2 w-full overflow-hidden rounded-full bg-rose-100">
+      <div id="progress" class="progress-bar h-full w-0 rounded-full bg-gradient-to-r from-rose-500 to-rose-300"></div>
+    </div>
+  </header>
+
+  <!-- Dynamic content -->
+  <main id="app" class="flex flex-1 flex-col justify-center"></main>
+
+  <footer class="pt-6 text-center text-[11px] text-rose-300">
+    Pagamento 100% seguro · Pix · Liberação automática
+  </footer>
+</div>
+
+<script>
+/* ============================================================================
+ *  CONFIG
+ *  API_BASE: deixe "" quando o backend servir este HTML (mesma origem).
+ *  Em deploy separado (frontend na Vercel, backend no Render), coloque aqui
+ *  a URL do backend, ex: "https://seu-backend.onrender.com"
+ * ========================================================================== */
+const API_BASE = "";
+const PRECO = "R$ 29,90";
+
+/* ------------------------------- Perguntas ------------------------------- */
+const QUESTIONS = [
+  {
+    id: "estado",
+    q: "Como está seu cabelo hoje?",
+    sub: "Seja sincera, o diagnóstico depende disso 💁‍♀️",
+    options: [
+      { v: "seco",    t: "Seco e sem brilho",        emoji: "🌵" },
+      { v: "oleoso",  t: "Oleoso na raiz",           emoji: "💧" },
+      { v: "frizz",   t: "Com frizz e volume",       emoji: "🌀" },
+      { v: "quebra",  t: "Quebradiço / pontas duplas",emoji: "✂️" },
+    ],
+  },
+  {
+    id: "incomodo",
+    q: "Qual seu MAIOR incômodo?",
+    sub: "O que mais te irrita no espelho",
+    options: [
+      { v: "brilho",  t: "Falta de brilho",   emoji: "✨" },
+      { v: "queda",   t: "Queda / falhas",    emoji: "🍂" },
+      { v: "frizz",   t: "Frizz e arrepiado", emoji: "⚡" },
+      { v: "cresce",  t: "Não cresce",        emoji: "🐢" },
+    ],
+  },
+  {
+    id: "rotina",
+    q: "Hoje, com que frequência você trata o cabelo?",
+    sub: "Hidratação, nutrição, reconstrução...",
+    options: [
+      { v: "nunca",   t: "Quase nunca",       emoji: "🙈" },
+      { v: "asvezes", t: "De vez em quando",  emoji: "🤷‍♀️" },
+      { v: "semanal", t: "Toda semana",       emoji: "📅" },
+      { v: "salao",   t: "Só no salão",       emoji: "💺" },
+    ],
+  },
+  {
+    id: "objetivo",
+    q: "Seu objetivo pro Réveillon?",
+    sub: "Como você quer estar nas fotos da virada",
+    options: [
+      { v: "brilho",  t: "Brilho de revista",     emoji: "🌟" },
+      { v: "volume",  t: "Mais volume e corpo",   emoji: "🦁" },
+      { v: "liso",    t: "Liso e alinhado",       emoji: "🪞" },
+      { v: "cachos",  t: "Cachos definidos",      emoji: "🌊" },
+    ],
+  },
+  {
+    id: "tempo",
+    q: "Quanto tempo por dia você tem?",
+    sub: "Pra montar um cronograma que caiba na sua rotina",
+    options: [
+      { v: "5",   t: "Uns 5 minutinhos",     emoji: "⏱️" },
+      { v: "15",  t: "Até 15 minutos",       emoji: "⏳" },
+      { v: "30",  t: "Meia hora tranquilo",  emoji: "🕐" },
+      { v: "max", t: "O tempo que precisar", emoji: "💪" },
+    ],
+  },
+];
+
+/* --------------------------- Motor de diagnóstico ------------------------- */
+function gerarDiagnostico(ans) {
+  const perfis = {
+    seco:   { nome: "Fios Sedentos de Brilho", foco: "hidratação profunda + selagem de brilho" },
+    oleoso: { nome: "Raiz Oleosa, Pontas Carentes", foco: "equilíbrio do couro + nutrição nas pontas" },
+    frizz:  { nome: "Potência com Frizz à Solta", foco: "controle de frizz + alinhamento" },
+    quebra: { nome: "Força em Reconstrução", foco: "reconstrução de massa + corte de pontas" },
+  };
+  const base = perfis[ans.estado] || perfis.seco;
+  const objetivoTxt = {
+    brilho: "brilho espelhado nas fotos da virada",
+    volume: "volume e movimento de comercial",
+    liso:   "liso alinhado que dura a noite toda",
+    cachos: "cachos definidos e sem frizz",
+  }[ans.objetivo] || "transformação visível";
+
+  const tempoTxt = {
+    "5":  "em rotinas de 5 minutos",
+    "15": "em janelas de 15 minutos",
+    "30": "com cuidados de 30 minutos",
+    "max":"com um protocolo mais completo",
+  }[ans.tempo] || "na sua rotina";
+
+  return {
+    titulo: base.nome,
+    resumo: `Seu cabelo está pedindo <b>${base.foco}</b>. Dá pra chegar no Réveillon com <b>${objetivoTxt}</b> `
+          + `${tempoTxt} — desde que você siga a ORDEM e os INTERVALOS certos nas próximas semanas.`,
+    bullets: [
+      "Cronograma capilar semana a semana até 31/12",
+      "A ordem certa: hidratar → nutrir → reconstruir (erro clássico é inverter)",
+      "Combinações de produtos de farmácia que substituem salão",
+      "Ritual da virada: passo a passo do dia 31 pras fotos",
+    ],
+  };
+}
+
+/* ------------------------------- Estado ---------------------------------- */
+const state = { step: 0, answers: {}, diag: null, order: null, poll: null };
+const app = document.getElementById("app");
+const progressEl = document.getElementById("progress");
+const stepLabel = document.getElementById("stepLabel");
+const TOTAL = QUESTIONS.length;
+
+function setProgress(pct, label) {
+  progressEl.style.width = Math.max(4, Math.min(100, pct)) + "%";
+  if (label) stepLabel.textContent = label;
+}
+
+function render(html) {
+  app.innerHTML = `<section class="screen">${html}</section>`;
+}
+
+/* ------------------------------- Telas ----------------------------------- */
+function screenWelcome() {
+  setProgress(4, "Comece aqui");
+  render(`
+    <div class="text-center">
+      <div class="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-white badge-glow text-4xl">💆‍♀️</div>
+      <h1 class="text-2xl font-extrabold leading-tight text-slate-900">
+        Diagnóstico de Transformação Capilar
+      </h1>
+      <p class="mt-2 text-sm text-slate-500">
+        Responda 5 perguntas rápidas e descubra o <b>protocolo exato</b> pra chegar
+        arrasando nas fotos do Réveillon. Leva menos de 1 minuto.
+      </p>
+      <div class="mt-6 space-y-2 text-left">
+        ${["Personalizado pro SEU tipo de fio","Cronograma semana a semana","Produtos de farmácia (sem gastar no salão)"]
+          .map(t => `<div class="flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3 text-sm font-medium text-slate-700">
+                       <span class="grid h-6 w-6 place-items-center rounded-full bg-rose-100 text-rose-600">✓</span>${t}
+                     </div>`).join("")}
+      </div>
+      <button onclick="start()" class="cta mt-7 w-full rounded-2xl py-4 text-base font-bold text-white">
+        Começar meu diagnóstico →
+      </button>
+      <p class="mt-3 text-[11px] text-rose-300">Grátis · Resultado na hora</p>
+    </div>
+  `);
+}
+
+function start() { state.step = 0; renderQuestion(); }
+
+function renderQuestion() {
+  const i = state.step;
+  const Q = QUESTIONS[i];
+  setProgress(((i) / TOTAL) * 100 + 6, `Pergunta ${i + 1} de ${TOTAL}`);
+  render(`
+    <div>
+      <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-rose-400">Pergunta ${i + 1}/${TOTAL}</p>
+      <h2 class="text-xl font-bold leading-snug text-slate-900">${Q.q}</h2>
+      <p class="mt-1 text-sm text-slate-400">${Q.sub}</p>
+      <div class="mt-5 space-y-3">
+        ${Q.options.map(o => `
+          <button data-v="${o.v}" onclick="answer('${Q.id}','${o.v}')"
+            class="opt flex w-full items-center gap-3 rounded-2xl border-2 border-rose-100 bg-white px-4 py-4 text-left">
+            <span class="text-2xl">${o.emoji}</span>
+            <span class="text-[15px] font-semibold text-slate-700">${o.t}</span>
+          </button>`).join("")}
+      </div>
+      ${i > 0 ? `<button onclick="back()" class="mt-5 w-full text-sm font-medium text-rose-400">← Voltar</button>` : ""}
+    </div>
+  `);
+}
+
+function answer(qid, val) {
+  state.answers[qid] = val;
+  // feedback visual rápido antes de avançar
+  const btn = app.querySelector(`[data-v="${CSS.escape(val)}"]`);
+  if (btn) btn.classList.add("selected");
+  setTimeout(() => {
+    if (state.step < TOTAL - 1) { state.step++; renderQuestion(); }
+    else screenAnalyzing();
+  }, 260);
+}
+
+function back() {
+  if (state.step > 0) { state.step--; renderQuestion(); }
+}
+
+function screenAnalyzing() {
+  setProgress(100, "Analisando...");
+  const msgs = [
+    "Lendo seu perfil capilar...",
+    "Cruzando com milhares de casos...",
+    "Montando seu cronograma até 31/12...",
+  ];
+  render(`
+    <div class="text-center">
+      <div class="mx-auto mb-6 spinner"></div>
+      <h2 class="text-lg font-bold text-slate-900">Analisando seu perfil e gerando protocolo...</h2>
+      <p id="analyzeMsg" class="mt-2 text-sm text-slate-500">${msgs[0]}</p>
+      <div class="mt-6 space-y-2">
+        ${[0,1,2].map(n => `<div class="shimmer mx-auto h-3 rounded-full" style="width:${90 - n*12}%"></div>`).join("")}
+      </div>
+    </div>
+  `);
+  let n = 0;
+  const el = document.getElementById("analyzeMsg");
+  const t = setInterval(() => { n++; if (el && msgs[n]) el.textContent = msgs[n]; }, 1000);
+  // registra o lead/respostas no backend em paralelo (não bloqueia a UX)
+  capturarRespostas();
+  setTimeout(() => { clearInterval(t); screenResult(); }, 3000);
+}
+
+async function capturarRespostas() {
+  try {
+    await fetch(API_BASE + "/api/quiz", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answers: state.answers }),
+    });
+  } catch (_) { /* silencioso: não atrapalha o funil */ }
+}
+
+function screenResult() {
+  state.diag = gerarDiagnostico(state.answers);
+  const d = state.diag;
+  setProgress(100, "Seu resultado");
+  render(`
+    <div>
+      <div class="rounded-3xl bg-white p-5 shadow-[0_20px_50px_-24px_rgba(242,74,133,.5)]">
+        <p class="text-xs font-semibold uppercase tracking-wide text-rose-400">Seu perfil capilar</p>
+        <h2 class="mt-1 text-2xl font-extrabold text-slate-900">${d.titulo}</h2>
+        <p class="mt-3 text-[15px] leading-relaxed text-slate-600">${d.resumo}</p>
+      </div>
+
+      <div class="mt-5 rounded-3xl border-2 border-dashed border-rose-200 bg-rose-50/60 p-5">
+        <p class="text-sm font-bold text-rose-700">🔒 Seu Cronograma Completo inclui:</p>
+        <ul class="mt-3 space-y-2">
+          ${d.bullets.map(b => `<li class="flex items-start gap-2 text-sm text-slate-700">
+              <span class="mt-0.5 text-rose-500">●</span><span>${b}</span></li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="mt-5 rounded-3xl bg-gradient-to-br from-rose-500 to-rose-400 p-5 text-white">
+        <div class="flex items-end justify-between">
+          <div>
+            <p class="text-xs opacity-90 line-through">De R$ 97,00</p>
+            <p class="text-3xl font-extrabold leading-none">${PRECO}</p>
+            <p class="mt-1 text-xs opacity-90">pagamento único · acesso imediato</p>
+          </div>
+          <div class="rounded-full bg-white/20 px-3 py-1 text-xs font-bold">69% OFF</div>
+        </div>
+        <button onclick="screenCheckout()" class="mt-4 w-full rounded-2xl bg-white py-4 text-base font-extrabold text-rose-600">
+          Desbloquear meu cronograma →
+        </button>
+        <p class="mt-2 text-center text-[11px] opacity-90">⚡ Oferta de fim de ano · vagas do protocolo limitadas</p>
+      </div>
+    </div>
+  `);
+}
+
+/* ------------------------------ Checkout Pix ----------------------------- */
+function screenCheckout() {
+  setProgress(100, "Pagamento");
+  render(`
+    <div>
+      <button onclick="screenResult()" class="mb-3 text-sm font-medium text-rose-400">← Voltar</button>
+      <h2 class="text-xl font-bold text-slate-900">Falta pouco! 🎉</h2>
+      <p class="mt-1 text-sm text-slate-500">Preencha pra gerar seu Pix e liberar o acesso na hora.</p>
+      <div class="mt-5 space-y-3">
+        <input id="nome" placeholder="Seu nome"
+          class="w-full rounded-2xl border-2 border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:border-rose-400" />
+        <input id="email" type="email" placeholder="Seu melhor e-mail"
+          class="w-full rounded-2xl border-2 border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:border-rose-400" />
+        <p class="px-1 text-[11px] text-slate-400">Enviamos o acesso também pra esse e-mail.</p>
+      </div>
+      <button id="genBtn" onclick="gerarPix()" class="cta mt-5 w-full rounded-2xl py-4 text-base font-bold text-white">
+        Gerar Pix de ${PRECO}
+      </button>
+      <div id="pixArea" class="mt-5"></div>
+    </div>
+  `);
+}
+
+async function gerarPix() {
+  const nome = (document.getElementById("nome").value || "").trim();
+  const email = (document.getElementById("email").value || "").trim();
+  if (!nome || !email || !email.includes("@")) {
+    alert("Preenche nome e um e-mail válido 🙂");
+    return;
+  }
+  const btn = document.getElementById("genBtn");
+  btn.disabled = true; btn.textContent = "Gerando Pix...";
+  try {
+    const r = await fetch(API_BASE + "/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nome, email, answers: state.answers, diagnosis: state.diag?.titulo }),
+    });
+    if (!r.ok) throw new Error("Falha ao criar cobrança");
+    const data = await r.json();
+    state.order = data;
+    mostrarPix(data);
+    iniciarPolling(data.order_id);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = `Gerar Pix de ${PRECO}`;
+    document.getElementById("pixArea").innerHTML =
+      `<p class="rounded-2xl bg-red-50 p-3 text-sm text-red-600">Ops, não consegui gerar o Pix agora. Tenta de novo.</p>`;
+  }
+}
+
+function mostrarPix(data) {
+  const img = data.qr_code_base64
+    ? `<img src="data:image/png;base64,${data.qr_code_base64}" alt="QR Code Pix" class="mx-auto h-52 w-52 rounded-xl" />`
+    : `<div class="mx-auto grid h-52 w-52 place-items-center rounded-xl bg-rose-50 text-rose-300 text-sm">QR indisponível</div>`;
+  document.getElementById("genBtn").style.display = "none";
+  document.getElementById("pixArea").innerHTML = `
+    <div class="rounded-3xl bg-white p-5 text-center shadow-[0_20px_50px_-24px_rgba(242,74,133,.5)]">
+      <p class="text-sm font-bold text-slate-900">Escaneie o QR Code no app do seu banco</p>
+      <div class="mt-4">${img}</div>
+      <p class="mt-4 mb-1 text-xs font-semibold text-slate-500">ou use o Pix Copia e Cola:</p>
+      <div class="flex items-center gap-2">
+        <input id="pixCode" readonly value="${data.qr_code || ""}"
+          class="w-full truncate rounded-xl border border-rose-100 bg-rose-50 px-3 py-2 text-[11px] text-slate-600" />
+        <button onclick="copiarPix()" class="shrink-0 rounded-xl bg-rose-500 px-3 py-2 text-xs font-bold text-white">Copiar</button>
+      </div>
+      <div id="statusBox" class="mt-5 flex items-center justify-center gap-2 text-sm font-medium text-rose-500">
+        <span class="pulse-dot">●</span> Aguardando pagamento...
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400">A tela libera sozinha assim que o Pix cair.</p>
+      ${data.gateway === "mock" ? `
+        <button onclick="simularPgto()" class="mt-4 w-full rounded-xl border-2 border-dashed border-rose-300 py-2 text-xs font-bold text-rose-500">
+          🧪 [MODO TESTE] Simular pagamento aprovado
+        </button>` : ""}
+    </div>`;
+}
+
+function copiarPix() {
+  const el = document.getElementById("pixCode");
+  el.select(); el.setSelectionRange(0, 99999);
+  navigator.clipboard?.writeText(el.value);
+  const btn = event.target; const old = btn.textContent;
+  btn.textContent = "Copiado!"; setTimeout(() => (btn.textContent = old), 1500);
+}
+
+async function simularPgto() {
+  try {
+    await fetch(API_BASE + "/api/dev/approve/" + state.order.order_id, { method: "POST" });
+  } catch (_) {}
+}
+
+function iniciarPolling(orderId) {
+  clearInterval(state.poll);
+  state.poll = setInterval(async () => {
+    try {
+      const r = await fetch(API_BASE + "/api/orders/" + orderId);
+      const d = await r.json();
+      if (d.status === "approved" || d.status === "paid") {
+        clearInterval(state.poll);
+        screenSuccess(d);
+      }
+    } catch (_) {}
+  }, 3000);
+}
+
+function screenSuccess(order) {
+  render(`
+    <div class="text-center">
+      <div class="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-full bg-green-100 text-4xl badge-glow">✅</div>
+      <h2 class="text-2xl font-extrabold text-slate-900">Pagamento aprovado!</h2>
+      <p class="mt-2 text-sm text-slate-500">
+        Seu Cronograma de Transformação Capilar tá liberado. Também mandamos pro seu e-mail.
+      </p>
+      <a href="${API_BASE + '/api/download/' + order.download_token}" target="_blank"
+         class="cta mt-6 inline-block w-full rounded-2xl py-4 text-base font-bold text-white">
+        ⬇️ Baixar meu cronograma
+      </a>
+      <p class="mt-4 text-[11px] text-rose-300">Qualquer coisa é só responder o e-mail de confirmação.</p>
+    </div>
+  `);
+}
+
+/* ------------------------------- Boot ------------------------------------ */
+screenWelcome();
+window.answer = answer; window.back = back; window.start = start;
+window.screenResult = screenResult; window.screenCheckout = screenCheckout;
+window.gerarPix = gerarPix; window.copiarPix = copiarPix;
+window.simularPgto = simularPgto;
+</script>
+</body>
+</html>

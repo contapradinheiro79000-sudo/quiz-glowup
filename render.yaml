@@ -1,0 +1,25 @@
+# Blueprint do Render — sobe o backend (que já serve o frontend) como Web Service grátis.
+# No Render: New + > Blueprint > conecte o repo. Ele lê este arquivo sozinho.
+services:
+  - type: web
+    name: quiz-glowup
+    runtime: python          # se o Render reclamar, troque por:  env: python
+    plan: free
+    rootDir: backend         # os comandos rodam dentro de /backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: PRECO
+        value: "29.90"
+      - key: CORS_ORIGINS
+        value: "*"
+      # Preencha estes no painel do Render (marcados como "sync:false" = você digita lá):
+      - key: MP_ACCESS_TOKEN
+        sync: false
+      - key: MP_WEBHOOK_SECRET
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false          # cole aqui a URL que o Render te der, ex: https://quiz-glowup.onrender.com
